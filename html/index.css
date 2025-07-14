@@ -1,0 +1,16 @@
+/* CSS:  */
+
+body {
+  background-color: rgb(128, 128, 128); /* Set background color to gray */
+}
+.deposit {
+  color: green; /* Set color to green for deposits */
+}
+.withdrawal {
+  color: red; /* Set
+color to red for withdrawals */
+}
+a:hover {
+  color: blue; /* Set hover color for
+links */
+}
