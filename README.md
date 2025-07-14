@@ -4,46 +4,86 @@
 
 ## ✨ React (Frontend)
 
+This section covers React fundamentals including state management, form handling, lifecycle hooks, and HTTP requests using both `fetch()` and `axios`.
+
 ### 🔄 useEffect() with Axios (GET Request)
 
+`useEffect()` is a lifecycle hook used to run side effects like API calls. Here's how to fetch data using `axios`:
+
 ```js
-useEffect(() => {
-  axios.get("/api/users")
-    .then(response => setUsers(response.data))
-    .catch(error => console.log(error));
-}, []);
+import { useEffect, useState } from "react";
+import axios from "axios";
+
+function App() {
+  const [users, setUsers] = useState([]);
+
+  useEffect(() => {
+    axios.get("/api/users")
+      .then(response => setUsers(response.data))
+      .catch(error => console.log(error));
+  }, []);
+
+  return (
+    <div>
+      {users.map(user => <p key={user.id}>{user.name}</p>)}
+    </div>
+  );
+}
 ```
 
 ### ✍️ Form Handling with useState
 
-```js
-const [form, setForm] = useState({ name: "", email: "" });
+To capture form inputs in React, use `useState()` with controlled components:
 
-const handleChange = (e) => {
-  setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
-};
+```js
+import { useState } from "react";
+
+function SignupForm() {
+  const [form, setForm] = useState({ name: "", email: "" });
+
+  const handleChange = (e) => {
+    setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  return (
+    <form>
+      <input name="name" value={form.name} onChange={handleChange} />
+      <input name="email" value={form.email} onChange={handleChange} />
+    </form>
+  );
+}
 ```
 
 ### ✉️ POST using fetch()
 
+To submit data to a backend API with `fetch`, use the following pattern:
+
 ```js
 const handleSubmit = async () => {
-  const response = await fetch("/api/users", {
-    method: "POST",
-    headers: {
-      'Content-Type': "application/json"
-    },
-    body: JSON.stringify(user),
-  });
+  try {
+    const response = await fetch("/api/users", {
+      method: "POST",
+      headers: {
+        'Content-Type': "application/json"
+      },
+      body: JSON.stringify({ name: "John", email: "john@example.com" })
+    });
 
-  if (!response.ok) throw new Error();
-  const data = await response.json();
+    if (!response.ok) throw new Error("Failed to submit form");
+
+    const data = await response.json();
+    console.log("Submitted:", data);
+  } catch (err) {
+    console.error("Error submitting:", err);
+  }
 };
 ```
 
 ---
 
 ## 🚀 Spring Boot (Backend)
+
+Spring Boot simplifies backend development using annotations, dependency injection, and integrations like JPA and Spring Security.
 
 ### ⚙️ Core Annotations
 
@@ -65,6 +105,8 @@ const handleSubmit = async () => {
 
 ### 📃 Data Retrieval in Controller
 
+Examples of getting data using @PathVariable, @RequestParam, and @RequestBody:
+
 ```java
 @GetMapping("/hello/{username}")
 public String greetUser(@PathVariable String username) {
@@ -78,13 +120,15 @@ public String greetUser(@RequestParam String name) {
 
 @PostMapping("/hello")
 public String greetUser(@RequestBody User user) {
-  return "Hello " + user.getUsername();
+  return "Hello " + user.getName();
 }
 ```
 
 ---
 
 ## 📊 Spring Data JPA
+
+Spring Data JPA handles ORM (Object Relational Mapping) through simple annotations.
 
 ### 🔐 Basic Setup
 
@@ -96,20 +140,25 @@ public class User {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  @Column
+  @Column(nullable = false)
   private String name;
 
-  @Column
+  @Column(unique = true, nullable = false)
   private String email;
+
+  // Getters and setters
 }
 ```
 
 ### ⚖️ Relationship Mapping
 
+Defines how entities relate to each other:
+
 ```java
 @Entity
 public class Order {
   @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
   @ManyToOne
@@ -120,88 +169,83 @@ public class Order {
 @Entity
 public class User {
   @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
   @JsonManagedReference
-  private List<Order> orders;
+  private List<Order> orders = new ArrayList<>();
+
+  // Getters and setters
 }
 ```
 
-### 🔍 Advanced Annotations
+### 🔍 Advanced JPA Annotations
 
 ```java
-@Embedded
-@ElementCollection
-@JsonIgnore
-@JsonManagedReference
-@JsonBackReference
+@Embedded               // For value object embedding
+@ElementCollection      // For list of simple types
+@JsonIgnore             // To avoid infinite loops
+@JsonManagedReference   // Used on parent side of bidirectional relation
+@JsonBackReference      // Used on child side
 ```
 
 ---
 
 ## 🔐 Spring Security with JWT
 
-### ⚖️ Required Interfaces/Classes
-
-```
-1. User
-2. UserDetails (interface)
-3. UserDetailsService (interface)
-4. InMemoryUserDetailsManager (class)
-5. SecurityFilterChain (bean method)
-6. AuthenticationProvider (interface)
-7. AuthenticationManager (interface)
-8. DaoAuthenticationProvider (class)
-9. PasswordEncoder
-10. UsernamePasswordAuthenticationToken
-11. JwtFilter implements OncePerRequestFilter
-```
+This section covers JWT-based stateless authentication.
 
 ### 📌 JWT Utility
+
+Generates and validates JWT tokens.
 
 ```java
 @Component
 public class JwtUtil {
-  private String JWTSECRET = "secret";
+  private final String JWT_SECRET = "secret";
 
   public String generateToken(String username) {
     return Jwts.builder()
-      .setSubject(username)
-      .setIssuedAt(new Date())
-      .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60))
-      .signWith(SignatureAlgorithm.HS256, JWTSECRET)
-      .compact();
+        .setSubject(username)
+        .setIssuedAt(new Date())
+        .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60))
+        .signWith(SignatureAlgorithm.HS256, JWT_SECRET)
+        .compact();
   }
 
   public String extractUsername(String token) {
     return Jwts.parser()
-      .setSigningKey(JWTSECRET)
-      .parseClaimsJws(token)
-      .getBody()
-      .getSubject();
+        .setSigningKey(JWT_SECRET)
+        .parseClaimsJws(token)
+        .getBody()
+        .getSubject();
   }
 
   public boolean isTokenExpired(String token) {
-    Date expiration = Jwts.parser()
-      .setSigningKey(JWTSECRET)
-      .parseClaimsJws(token)
-      .getBody()
-      .getExpiration();
-    return expiration.before(new Date());
+    return Jwts.parser()
+        .setSigningKey(JWT_SECRET)
+        .parseClaimsJws(token)
+        .getBody()
+        .getExpiration()
+        .before(new Date());
   }
 
-  public boolean validateToken(String token, UserDetails user) {
-    return extractUsername(token).equals(user.getUsername()) && !isTokenExpired(token);
+  public boolean validateToken(String token, UserDetails userDetails) {
+    final String username = extractUsername(token);
+    return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
   }
 }
 ```
 
 ### ⛓️ JWT Filter
 
+Reads token, extracts username, and authenticates.
+
 ```java
 @Component
 public class JwtFilter extends OncePerRequestFilter {
+
   @Autowired
   private JwtUtil jwtUtil;
 
@@ -209,7 +253,9 @@ public class JwtFilter extends OncePerRequestFilter {
   private UserDetailsService userDetailsService;
 
   @Override
-  protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+  protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+      throws ServletException, IOException {
+
     final String authHeader = request.getHeader("Authorization");
     String token = null;
     String username = null;
@@ -221,11 +267,13 @@ public class JwtFilter extends OncePerRequestFilter {
 
     if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
       UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+
       if (jwtUtil.validateToken(token, userDetails)) {
-        UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-          userDetails, null, userDetails.getAuthorities()
-        );
-        SecurityContextHolder.getContext().setAuthentication(authToken);
+        UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+            userDetails, null, userDetails.getAuthorities());
+        authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+
+        SecurityContextHolder.getContext().setAuthentication(authentication);
       }
     }
     filterChain.doFilter(request, response);
@@ -235,22 +283,53 @@ public class JwtFilter extends OncePerRequestFilter {
 
 ### 🛡️ Security Configuration
 
+Defines access control rules and beans.
+
 ```java
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity
+@EnableMethodSecurity // Enables @PreAuthorize
 public class SecurityConfig {
   @Bean
-  public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+  public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
     http.csrf().disable()
         .authorizeHttpRequests()
         .requestMatchers("/api/auth/**").permitAll()
-        .anyRequest().authenticated();
+        .anyRequest().authenticated()
+        .and()
+        .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+
     return http.build();
   }
 }
 ```
 
----
+### 🔐 Sample Auth Controller with @PreAuthorize
 
-Let me know if you want this broken into frontend/backend folders or extended to include login flows, database init, or full-stack testing setup.
+This controller shows how to protect endpoints using roles:
+
+```java
+@RestController
+@RequestMapping("/api/auth")
+public class AuthController {
+
+  @GetMapping("/public")
+  public String publicEndpoint() {
+    return "This is a public endpoint";
+  }
+
+  @PreAuthorize("hasRole('USER')")
+  @GetMapping("/user")
+  public String userEndpoint() {
+    return "This endpoint is accessible by USER role";
+  }
+
+  @PreAuthorize("hasRole('ADMIN')")
+  @GetMapping("/admin")
+  public String adminEndpoint() {
+    return "This endpoint is accessible by ADMIN role";
+  }
+}
+```
+
+---
