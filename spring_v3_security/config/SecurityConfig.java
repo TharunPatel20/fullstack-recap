@@ -22,6 +22,7 @@ import com.example.spring_v3_security.service.CustomUserDetailsService;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @EnableWebSecurity
+@EnableMethodSecurity
 @Configuration
 public class SecurityConfig {
 
