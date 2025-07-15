@@ -114,6 +114,7 @@ public String greetUser(@PathVariable String username) {
 }
 
 @GetMapping("/hello")
+//  /hello?name=user1
 public String greetUser(@RequestParam String name) {
   return "Hello " + name;
 }
